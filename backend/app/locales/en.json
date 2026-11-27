@@ -1,0 +1,13 @@
+{
+  "review.squad_mention": "{mentions} a new merge request is waiting for your review: {mr_url}",
+  "review.pipeline.running": ":large_blue_circle: Pipeline #{pipeline_id} is running ({ref}). {url}",
+  "review.pipeline.success": ":large_green_circle: Pipeline #{pipeline_id} passed ({ref}). {url}",
+  "review.pipeline.failed": ":red_circle: Pipeline #{pipeline_id} failed ({ref}). {url}",
+  "review.pipeline.canceled": ":white_circle: Pipeline #{pipeline_id} was canceled ({ref}). {url}",
+  "review.pipeline.other": "Pipeline #{pipeline_id}: {status} ({ref}). {url}",
+  "review.merged": ":rocket: Merged by {user} into `{target}`.",
+  "review.closed": ":x: The merge request was closed without merging.",
+  "daily.reminder": ":alarm_clock: Daily in {minutes} min ({time}). Today's facilitator: {facilitator}.",
+  "daily.reminder_no_facilitator": ":alarm_clock: Daily in {minutes} min ({time}).",
+  "daily.meeting_link": "Join: {meeting_url}"
+}

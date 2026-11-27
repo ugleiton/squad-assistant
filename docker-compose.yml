@@ -1,0 +1,23 @@
+# SQLite (default):        docker compose up -d
+# With PostgreSQL:         docker compose --profile postgres up -d  (and set SQUAD_DATABASE_URL in .env)
+services:
+  app:
+    build: .
+    ports: ["8000:8000"]
+    env_file: [.env]
+    volumes: [data:/data]
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17-alpine
+    profiles: [postgres]
+    environment:
+      POSTGRES_DB: squad_assistant
+      POSTGRES_USER: squad
+      POSTGRES_PASSWORD: squad
+    volumes: [pg:/var/lib/postgresql/data]
+    restart: unless-stopped
+
+volumes:
+  data:
+  pg:
