@@ -23,6 +23,8 @@ docker compose up -d        # SQLite, data in the "data" volume
 open http://localhost:8000
 ```
 
+Or use the published image: `docker run -p 8000:8000 --env-file .env -v squad-data:/data <dockerhub-user>/squad-assistant:latest`.
+
 To use PostgreSQL, set `SQUAD_DATABASE_URL=postgresql+psycopg://...` and run
 `docker compose --profile postgres up -d`.
 
@@ -53,7 +55,7 @@ GitLab ──webhook──► FastAPI ◄── Admin UI (React)
 | In review | Someone commented and discussions are still open | `:mag:` |
 | Resolved / approved | MR approved or every review discussion resolved | `:white_check_mark:` |
 | Merged | MR merged | `:rocket:` |
-| Closed | MR closed without merge | `:x:` |
+| Closed | MR closed without merge | `:heavy_check_mark:` (gray check) |
 
 ### Daily assistant
 
@@ -85,6 +87,13 @@ npm run dev                            # http://localhost:5173
 
 - Admin UI: add `frontend/src/locales/<lang>.json` and register it in `frontend/src/i18n.ts`.
 - Bot messages: add `backend/app/locales/<lang>.json` with the same keys as `en.json`.
+
+## Docker images
+
+`.github/workflows/docker-publish.yml` builds `linux/amd64` and `linux/arm64` images and pushes
+them to Docker Hub: every push to `main` publishes `:main`, and a tag like `v0.1.0` publishes
+`:0.1.0`, `:0.1`, `:0` and `:latest`. It needs the repository secrets `DOCKERHUB_USERNAME` and
+`DOCKERHUB_TOKEN` (a Docker Hub access token with Read & Write scope).
 
 ## Roadmap
 

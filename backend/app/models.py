@@ -64,7 +64,7 @@ DEFAULT_REVIEW_EMOJIS = {
     ReviewState.in_review.value: "mag",
     ReviewState.resolved.value: "white_check_mark",
     ReviewState.merged.value: "rocket",
-    ReviewState.closed.value: "x",
+    ReviewState.closed.value: "heavy_check_mark",  # gray check
 }
 
 DEFAULT_REVIEW_FEATURES = {

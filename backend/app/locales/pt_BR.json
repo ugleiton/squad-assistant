@@ -6,7 +6,7 @@
   "review.pipeline.canceled": ":white_circle: Pipeline #{pipeline_id} foi cancelado ({ref}). {url}",
   "review.pipeline.other": "Pipeline #{pipeline_id}: {status} ({ref}). {url}",
   "review.merged": ":rocket: Mergeado por {user} em `{target}`.",
-  "review.closed": ":x: O merge request foi fechado sem merge.",
+  "review.closed": ":heavy_check_mark: O merge request foi fechado sem merge.",
   "daily.reminder": ":alarm_clock: Daily em {minutes} min ({time}). Facilitador de hoje: {facilitator}.",
   "daily.reminder_no_facilitator": ":alarm_clock: Daily em {minutes} min ({time}).",
   "daily.meeting_link": "Entrar: {meeting_url}"
