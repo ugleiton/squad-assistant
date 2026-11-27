@@ -1,3 +1,5 @@
+"""Composition root: builds the FastAPI app, wires routers and starts the scheduler."""
+
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -7,12 +9,12 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import __version__
-from .api import connections, daily, review, squads, webhooks
-from .api.deps import require_admin
-from .config import get_settings
-from .db import init_db
-from .i18n import available_languages
-from .models import DEFAULT_REVIEW_EMOJIS, DEFAULT_REVIEW_FEATURES
+from .domain.enums import DEFAULT_REVIEW_EMOJIS, DEFAULT_REVIEW_FEATURES
+from .infrastructure.config import get_settings
+from .infrastructure.i18n import available_languages
+from .infrastructure.persistence.db import init_db
+from .interfaces.api import connections, daily, review, squads, webhooks
+from .interfaces.api.deps import require_admin
 
 logging.basicConfig(level=logging.INFO)
 STATIC_DIR = Path(__file__).parent / "static"
@@ -23,7 +25,7 @@ async def lifespan(app: FastAPI):
     init_db()
     scheduler = None
     if get_settings().scheduler_enabled:
-        from .scheduler import build_scheduler
+        from .infrastructure.scheduler import build_scheduler
 
         scheduler = build_scheduler()
         scheduler.start()

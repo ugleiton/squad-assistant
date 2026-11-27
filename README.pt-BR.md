@@ -34,6 +34,9 @@ Acesse http://localhost:8000. Para usar PostgreSQL, defina
    A interface mostra uma única vez a **URL do webhook e o secret token**. No GitLab, vá em
    *Settings → Webhooks* e marque os eventos *Merge request*, *Comments* e *Pipeline*.
 
+O backend segue Clean Architecture (`domain`, `application`, `infrastructure` e `interfaces`),
+descrita no [CLAUDE.md](CLAUDE.md).
+
 Os detalhes de estados, permissões do bot e desenvolvimento estão no [README em inglês](README.md).
 
 ## Licença
