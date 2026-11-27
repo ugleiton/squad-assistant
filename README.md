@@ -92,8 +92,8 @@ npm run dev                            # http://localhost:5173
 
 `.github/workflows/docker-publish.yml` builds `linux/amd64` and `linux/arm64` images and pushes
 them to Docker Hub: every push to `main` publishes `:main`, and a tag like `v0.1.0` publishes
-`:0.1.0`, `:0.1`, `:0` and `:latest`. It needs the repository secrets `DOCKERHUB_USERNAME` and
-`DOCKERHUB_TOKEN` (a Docker Hub access token with Read & Write scope).
+`:0.1.0`, `:0.1`, `:0` and `:latest`. It reads `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` from the GitHub environment
+`GENERAL` (a Docker Hub access token with Read & Write scope).
 
 ## Roadmap
 
