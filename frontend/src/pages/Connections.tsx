@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api, ChatConnection, GitLabConnection } from "../api";
+import { Notice, Status } from "../Notice";
 import { useList } from "../useList";
 
 export default function Connections() {
@@ -9,6 +10,20 @@ export default function Connections() {
   const gitlabs = useList<GitLabConnection>("/gitlab-connections");
   const [chat, setChat] = useState({ name: "", provider: "slack", base_url: "", bot_token: "" });
   const [gl, setGl] = useState({ name: "", base_url: "https://gitlab.com", access_token: "" });
+  const [status, setStatus] = useState<Status>(null);
+  const testChat = async (id: number) => {
+    try {
+      const r = await api.post<{ bot_user_id: string }>(`/chat-connections/${id}/test`);
+      setStatus({ kind: "ok", text: t("connections.test_ok_chat", { id: r.bot_user_id }) });
+      chats.reload();
+    } catch (e) { setStatus({ kind: "error", text: String(e) }); }
+  };
+  const testGl = async (id: number) => {
+    try {
+      const r = await api.post<{ username: string }>(`/gitlab-connections/${id}/test`);
+      setStatus({ kind: "ok", text: t("connections.test_ok_gitlab", { user: r.username }) });
+    } catch (e) { setStatus({ kind: "error", text: String(e) }); }
+  };
 
   const addChat = async (e: FormEvent) => {
     e.preventDefault();
@@ -25,6 +40,7 @@ export default function Connections() {
 
   return (
     <>
+      <Notice status={status} onClose={() => setStatus(null)} />
       <section className="card">
         <h2>{t("connections.chat")}</h2>
         <table>
@@ -33,7 +49,10 @@ export default function Connections() {
               <tr key={c.id}>
                 <td>{c.name}</td><td>{c.provider}</td><td>{c.base_url}</td>
                 <td>{c.has_token ? "🔑" : "—"}</td>
-                <td><button className="link" onClick={() => api.del(`/chat-connections/${c.id}`).then(chats.reload)}>{t("common.delete")}</button></td>
+                <td>
+                  <button className="link" onClick={() => testChat(c.id)}>{t("connections.test")}</button>
+                  <button className="link" onClick={() => api.del(`/chat-connections/${c.id}`).then(chats.reload)}>{t("common.delete")}</button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -59,7 +78,10 @@ export default function Connections() {
             {gitlabs.items.map((c) => (
               <tr key={c.id}>
                 <td>{c.name}</td><td>{c.base_url}</td><td>{c.has_token ? "🔑" : "—"}</td>
-                <td><button className="link" onClick={() => api.del(`/gitlab-connections/${c.id}`).then(gitlabs.reload)}>{t("common.delete")}</button></td>
+                <td>
+                  <button className="link" onClick={() => testGl(c.id)}>{t("connections.test")}</button>
+                  <button className="link" onClick={() => api.del(`/gitlab-connections/${c.id}`).then(gitlabs.reload)}>{t("common.delete")}</button>
+                </td>
               </tr>
             ))}
           </tbody>

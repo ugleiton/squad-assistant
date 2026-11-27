@@ -21,7 +21,8 @@ async def run_review_scans(now: datetime | None = None) -> None:
             if not a.is_scan_due(now):
                 continue
             try:
-                await container.review_tracker(s, a).scan(now)
+                async with container.review_tracker(s, a) as tracker:
+                    await tracker.scan(now)
             except Exception:
                 log.exception("review scan failed for assistant %s", a.id)
 
@@ -30,7 +31,8 @@ async def run_daily_ticks(now: datetime | None = None) -> None:
     with Session(engine) as s:
         for a in SqlDailyRepository(s).list_enabled_assistants():
             try:
-                await container.daily_reminder(s, a).tick(now)
+                async with container.daily_reminder(s, a) as reminder:
+                    await reminder.tick(now)
             except Exception:
                 log.exception("daily reminder failed for assistant %s", a.id)
 

@@ -4,31 +4,16 @@ publish pipeline/merge messages coming from GitLab webhooks."""
 import logging
 from datetime import UTC, datetime, timedelta
 
-from ...domain.entities import Member, ReviewAssistant, ReviewThread, utcnow
+from ...domain.entities import ReviewAssistant, ReviewThread, utcnow
 from ...domain.enums import ReviewState
 from ...domain.mr_links import find_mr_links, matches_project
 from ...domain.review_state import compute_state
+from ...domain.squads import squad_mates
 from ..ports import ChatProvider, GitLabGateway, ReviewRepository, Translator
 
 log = logging.getLogger(__name__)
 
 PIPELINE_STATUSES = ("running", "success", "failed", "canceled")
-
-
-def squad_mates(
-    pairs: list[tuple[int, Member]], squad_ids: list[int], author_chat_id: str | None
-) -> list[Member]:
-    """Members of the author's squad(s) among `squad_ids`, excluding the author.
-    If the author is in none of them, everyone in the configured squads is mentioned."""
-    author_squads = {sid for sid, m in pairs if m.chat_user_id == author_chat_id}
-    target = author_squads or set(squad_ids)
-    seen: set[int | None] = set()
-    mates = []
-    for sid, m in pairs:
-        if sid in target and m.chat_user_id != author_chat_id and m.id not in seen:
-            seen.add(m.id)
-            mates.append(m)
-    return mates
 
 
 class ReviewTracker:
@@ -83,29 +68,32 @@ class ReviewTracker:
         return found
 
     async def refresh_thread(self, thread: ReviewThread) -> ReviewState:
-        if self.a.feature("mention_squad") and not thread.squad_notified:
-            pairs = self.repo.squad_members(self.a.squad_ids)
-            mates = squad_mates(pairs, self.a.squad_ids, thread.chat_author_id)
-            if mates:
-                mentions = " ".join(
-                    self.chat.mention(m.chat_user_id, m.chat_username) for m in mates
-                )
-                await self.chat.post_message(
-                    self.a.channel_id,
-                    self._t("review.squad_mention", mentions=mentions, mr_url=thread.mr_url),
-                    thread_id=thread.chat_thread_id,
-                )
+        mr = await self.gitlab.merge_request_status(thread.gitlab_project, thread.mr_iid)
+        if not thread.squad_notified:
+            if self.a.feature("mention_squad") and mr.state == "opened":
+                await self._mention_squad(thread, mr.author_username)
             thread.squad_notified = True
 
-        mr = await self.gitlab.merge_request_status(thread.gitlab_project, thread.mr_iid)
         replies = await self.chat.list_replies(self.a.channel_id, thread.chat_thread_id)
-        ignored = {self.chat.bot_user_id, thread.chat_author_id}
+        ignored = {await self.chat.get_bot_user_id(), thread.chat_author_id}
         others = [r for r in replies if r.user_id not in ignored]
         new_state = compute_state(
             mr, chat_replies_from_others=len(others), mark_resolved=self.a.feature("mark_resolved")
         )
         await self.set_state(thread, new_state)
         return new_state
+
+    async def _mention_squad(self, thread: ReviewThread, author_gitlab: str | None) -> None:
+        pairs = self.repo.squad_members(self.a.squad_ids)
+        mates = squad_mates(pairs, self.a.squad_ids, thread.chat_author_id, author_gitlab)
+        if not mates:
+            return
+        mentions = " ".join(self.chat.mention(m.chat_user_id, m.chat_username) for m in mates)
+        await self.chat.post_message(
+            self.a.channel_id,
+            self._t("review.squad_mention", mentions=mentions, mr_url=thread.mr_url),
+            thread_id=thread.chat_thread_id,
+        )
 
     async def set_state(self, thread: ReviewThread, state: ReviewState) -> None:
         new_emoji = self.a.emoji_for(state)

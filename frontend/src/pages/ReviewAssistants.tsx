@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { api, ChatConnection, GitLabConnection, Meta, ReviewAssistant, Squad } from "../api";
+import { api, ChatConnection, GitLabConnection, Meta, ReviewAssistant, ReviewThread, Squad } from "../api";
+import { Notice, Status } from "../Notice";
 import { useList } from "../useList";
 
 type Form = Omit<ReviewAssistant, "id" | "webhook_url"> & { id?: number };
@@ -22,6 +23,8 @@ export default function ReviewAssistants() {
   const [form, setForm] = useState<Form>(empty());
   const [creds, setCreds] = useState<Creds | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<Status>(null);
+  const [threads, setThreads] = useState<{ id: number; items: ReviewThread[] } | null>(null);
 
   useEffect(() => {
     api.get<Meta>("/meta").then((m) => { setMeta(m); setForm(empty(m)); });
@@ -39,8 +42,17 @@ export default function ReviewAssistants() {
   };
   const regenerate = async (id: number) => setCreds(await api.post<Creds>(`/review-assistants/${id}/regenerate-token`));
   const scan = async (id: number) => {
-    const r = await api.post<{ new_threads: number }>(`/review-assistants/${id}/scan`);
-    alert(t("review.scan_result", { count: r.new_threads }));
+    try {
+      const r = await api.post<{ new_threads: number }>(`/review-assistants/${id}/scan`);
+      setStatus({ kind: "ok", text: t("review.scan_result", { count: r.new_threads }) });
+      if (threads?.id === id) showThreads(id);
+    } catch (e) { setStatus({ kind: "error", text: String(e) }); }
+  };
+  const showThreads = async (id: number) =>
+    setThreads({ id, items: await api.get<ReviewThread[]>(`/review-assistants/${id}/threads`) });
+  const toggleEnabled = async (a: ReviewAssistant) => {
+    await api.put(`/review-assistants/${a.id}`, { ...a, enabled: !a.enabled });
+    list.reload();
   };
   const toggleSquad = (id: number) => setForm((f) => ({
     ...f, squad_ids: f.squad_ids.includes(id) ? f.squad_ids.filter((x) => x !== id) : [...f.squad_ids, id],
@@ -56,12 +68,13 @@ export default function ReviewAssistants() {
           <button className="link" onClick={() => setCreds(null)}>{t("common.close")}</button>
         </div>
       )}
+      <Notice status={status} onClose={() => setStatus(null)} />
       <section className="card">
         <h2>{t("nav.review")}</h2>
         <table>
           <tbody>
             {list.items.map((a) => (
-              <tr key={a.id}>
+              <tr key={a.id} className={a.enabled ? "" : "muted"}>
                 <td><b>{a.name}</b> {a.enabled ? "" : `(${t("common.disabled")})`}</td>
                 <td>#{a.channel_id}</td>
                 <td><code>{a.webhook_url}</code></td>
@@ -69,12 +82,36 @@ export default function ReviewAssistants() {
                   <button className="link" onClick={() => setForm(a)}>{t("common.edit")}</button>
                   <button className="link" onClick={() => regenerate(a.id)}>{t("review.regenerate")}</button>
                   <button className="link" onClick={() => scan(a.id)}>{t("review.scan_now")}</button>
+                  <button className="link" onClick={() => showThreads(a.id)}>{t("review.threads")}</button>
+                  <button className="link" onClick={() => toggleEnabled(a)}>{a.enabled ? t("common.disable") : t("common.enable")}</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </section>
+      {threads && (
+        <section className="card">
+          <h2>{t("review.threads")} · {list.items.find((a) => a.id === threads.id)?.name}
+            {" "}<button className="link" onClick={() => setThreads(null)}>{t("common.close")}</button>
+          </h2>
+          {threads.items.length === 0 ? <p>{t("review.no_threads")}</p> : (
+            <table>
+              <thead><tr><th>MR</th><th>{t("review.status")}</th><th>Pipeline</th><th>{t("review.updated")}</th></tr></thead>
+              <tbody>
+                {threads.items.map((th) => (
+                  <tr key={th.id}>
+                    <td><a href={th.mr_url} target="_blank" rel="noreferrer">{th.gitlab_project}!{th.mr_iid}</a></td>
+                    <td><span className={`badge ${th.state}`}>{t(`review.state.${th.state}`)}</span></td>
+                    <td>{th.last_pipeline_status ?? "—"}</td>
+                    <td>{new Date(th.updated_at).toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+      )}
       <form className="card" onSubmit={save}>
         <h2>{form.id ? t("common.edit") : t("review.new")}</h2>
         <div className="row">

@@ -4,7 +4,17 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     headers: body ? { "Content-Type": "application/json" } : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+  if (!res.ok) {
+    const text = await res.text();
+    let detail = text;
+    try {
+      const parsed = JSON.parse(text).detail;
+      detail = typeof parsed === "string" ? parsed : JSON.stringify(parsed);
+    } catch {
+      /* not JSON */
+    }
+    throw new Error(`${res.status}: ${detail}`);
+  }
   return res.status === 204 ? (undefined as T) : res.json();
 }
 
@@ -29,9 +39,14 @@ export type Schedule = { weekday: number; time: string };
 export type DailyAssistant = {
   id: number; name: string; enabled: boolean; language: string; timezone: string;
   delivery: "bot" | "webhook"; chat_connection_id?: number | null; channel_id?: string | null;
+  webhook_platform?: "slack" | "mattermost" | null;
   webhook_url?: string; has_webhook_url?: boolean; lead_time_minutes: number;
   rotation_mode: "none" | "daily" | "weekly"; meeting_url?: string | null;
   schedules: Schedule[]; participants: { member_id: number; order: number; active: boolean }[];
   current_facilitator_id?: number | null;
 };
 export type Meta = { languages: string[]; review_emojis: Record<string, string>; review_features: Record<string, boolean> };
+export type ReviewThread = {
+  id: number; chat_thread_id: string; gitlab_project: string; mr_iid: number; mr_url: string;
+  state: string; last_pipeline_status?: string | null; created_at: string; updated_at: string;
+};

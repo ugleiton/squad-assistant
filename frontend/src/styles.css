@@ -18,3 +18,10 @@ td, th { text-align: left; padding: .4rem; border-bottom: 1px solid #eaeef2; fon
 code, .secret { background: #f6f8fa; padding: .15rem .35rem; border-radius: 4px; word-break: break-all; }
 .notice { background: #fff8c5; border: 1px solid #d4a72c; padding: .75rem; border-radius: 6px; margin: .75rem 0; }
 .error { color: #cf222e; }
+.ok { color: #1a7f37; }
+.badge { display: inline-block; padding: .1rem .45rem; border-radius: 999px; font-size: .75rem; background: #eaeef2; }
+.badge.awaiting_review { background: #fff8c5; }
+.badge.in_review { background: #ddf4ff; }
+.badge.resolved, .badge.merged { background: #dafbe1; }
+.badge.closed { background: #eaeef2; color: #57606a; }
+tr.muted td { color: #8c959f; }

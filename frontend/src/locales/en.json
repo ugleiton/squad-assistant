@@ -1,34 +1,102 @@
 {
-  "nav": { "review": "Review assistants", "daily": "Daily assistants", "squads": "Squads", "connections": "Connections" },
+  "nav": {
+    "review": "Review assistants",
+    "daily": "Daily assistants",
+    "squads": "Squads",
+    "connections": "Connections"
+  },
   "common": {
-    "name": "Name", "add": "Add", "save": "Save", "edit": "Edit", "delete": "Delete", "close": "Close",
-    "enabled": "Enabled", "disabled": "disabled", "bot_language": "Bot language",
-    "chat_connection": "Chat connection", "channel_id": "Channel ID"
+    "name": "Name",
+    "add": "Add",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "close": "Close",
+    "enabled": "Enabled",
+    "disabled": "disabled",
+    "bot_language": "Bot language",
+    "chat_connection": "Chat connection",
+    "channel_id": "Channel ID",
+    "cancel": "Cancel",
+    "enable": "Enable",
+    "disable": "Disable"
   },
   "connections": {
-    "chat": "Slack / Mattermost", "provider": "Provider", "server_url": "Server URL",
-    "bot_token": "Bot token", "access_token": "Access token (read_api)"
+    "chat": "Slack / Mattermost",
+    "provider": "Provider",
+    "server_url": "Server URL",
+    "bot_token": "Bot token",
+    "access_token": "Access token (read_api)",
+    "test": "Test",
+    "test_ok_chat": "Connected. Bot user: {{id}}",
+    "test_ok_gitlab": "Connected as {{user}}"
   },
-  "squads": { "squads": "Squads", "members": "Members", "chat_user_id": "Chat user ID", "chat_username": "Chat username" },
+  "squads": {
+    "squads": "Squads",
+    "members": "Members",
+    "chat_user_id": "Chat user ID",
+    "chat_username": "Chat username"
+  },
   "review": {
-    "new": "New review assistant", "projects": "GitLab projects (empty = any)", "squads": "Squads",
-    "scan_interval": "Scan interval (min)", "status_emojis": "Status emojis", "features_title": "Actions",
-    "regenerate": "New token", "scan_now": "Scan now", "scan_result": "{{count}} new threads found",
+    "new": "New review assistant",
+    "projects": "GitLab projects (empty = any)",
+    "squads": "Squads",
+    "scan_interval": "Scan interval (min)",
+    "status_emojis": "Status emojis",
+    "features_title": "Actions",
+    "regenerate": "New token",
+    "scan_now": "Scan now",
+    "scan_result": "{{count}} new threads found",
     "webhook_title": "GitLab webhook.",
     "webhook_help": "In GitLab go to Settings → Webhooks, paste the URL and secret token, and enable Merge request, Comments and Pipeline events. The token is shown only once.",
-    "state": { "awaiting_review": "Awaiting review", "in_review": "In review", "resolved": "Resolved / approved", "merged": "Merged", "closed": "Closed" },
+    "state": {
+      "awaiting_review": "Awaiting review",
+      "in_review": "In review",
+      "resolved": "Resolved / approved",
+      "merged": "Merged",
+      "closed": "Closed"
+    },
     "features": {
-      "mark_status": "Mark thread status with emojis", "mention_squad": "Mention the author's squad",
-      "pipeline_messages": "Post pipeline status", "merge_messages": "Post merge message",
+      "mark_status": "Mark thread status with emojis",
+      "mention_squad": "Mention the author's squad",
+      "pipeline_messages": "Post pipeline status",
+      "merge_messages": "Post merge message",
       "mark_resolved": "Mark resolved when approved or discussions resolved"
-    }
+    },
+    "threads": "Threads",
+    "no_threads": "No threads found yet. Run a scan.",
+    "status": "Status",
+    "updated": "Updated"
   },
   "daily": {
-    "new": "New daily assistant", "timezone": "Time zone", "schedule": "Schedule", "participants": "Participants",
-    "rotation": "Facilitator rotation", "rotation_none": "No rotation", "rotation_daily": "Every day", "rotation_weekly": "Every week",
-    "lead_time": "Alert before (min)", "meeting_url": "Meeting link", "delivery": "Delivery",
-    "delivery_bot": "Bot", "delivery_webhook": "Incoming webhook", "webhook_url": "Webhook URL",
-    "facilitator": "Facilitator", "send_test": "Send test"
+    "new": "New daily assistant",
+    "timezone": "Time zone",
+    "schedule": "Schedule",
+    "participants": "Participants",
+    "rotation": "Facilitator rotation",
+    "rotation_none": "No rotation",
+    "rotation_daily": "Every day",
+    "rotation_weekly": "Every week",
+    "lead_time": "Alert before (min)",
+    "meeting_url": "Meeting link",
+    "delivery": "Delivery",
+    "delivery_bot": "Bot",
+    "delivery_webhook": "Incoming webhook",
+    "webhook_url": "Webhook URL",
+    "facilitator": "Facilitator",
+    "send_test": "Send test",
+    "webhook_platform": "Webhook platform",
+    "absent": "Absent (skip in rotation)",
+    "order_help": "Rotation order: the facilitator follows this list.",
+    "test_sent": "Test sent: {{text}}"
   },
-  "weekday": { "0": "Mon", "1": "Tue", "2": "Wed", "3": "Thu", "4": "Fri", "5": "Sat", "6": "Sun" }
+  "weekday": {
+    "0": "Mon",
+    "1": "Tue",
+    "2": "Wed",
+    "3": "Thu",
+    "4": "Fri",
+    "5": "Sat",
+    "6": "Sun"
+  }
 }

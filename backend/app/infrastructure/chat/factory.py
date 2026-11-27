@@ -10,7 +10,7 @@ from .webhook import IncomingWebhookProvider
 def provider_for_connection(conn: ChatConnection) -> ChatProvider:
     token = decrypt(conn.bot_token) or ""
     if conn.provider == ChatProviderType.slack:
-        return SlackProvider(token)
+        return SlackProvider(token, conn.bot_user_id)
     if conn.provider == ChatProviderType.mattermost:
         if not conn.base_url:
             raise ValueError("Mattermost connection needs base_url")

@@ -6,6 +6,7 @@ from datetime import UTC, datetime, time
 from .enums import (
     DEFAULT_REVIEW_EMOJIS,
     DEFAULT_REVIEW_FEATURES,
+    ChatProviderType,
     DeliveryMode,
     ReviewState,
     RotationMode,
@@ -117,6 +118,7 @@ class DailyAssistant:
     delivery: DeliveryMode = DeliveryMode.bot
     chat_connection_id: int | None = None
     channel_id: str | None = None
+    webhook_platform: ChatProviderType | None = None
     lead_time_minutes: int = 10
     rotation_mode: RotationMode = RotationMode.daily
     meeting_url: str | None = None

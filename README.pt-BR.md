@@ -37,6 +37,20 @@ Acesse http://localhost:8000. Para usar PostgreSQL, defina
 O backend segue Clean Architecture (`domain`, `application`, `infrastructure` e `interfaces`),
 descrita no [CLAUDE.md](CLAUDE.md).
 
+A squad mencionada é a do autor: ele é identificado pelo usuário que postou a thread ou, se não
+estiver cadastrado, pelo usuário do GitLab que abriu a MR. Na interface, **Threads** mostra as MRs
+acompanhadas e **Testar** valida os tokens das conexões.
+
+## Daily assistant
+
+Configure os dias e horários, o fuso, os participantes na ordem do revezamento (marque quem estiver
+ausente para pular), o revezamento por dia ou por semana, a antecedência do aviso e o envio pelo
+bot ou por incoming webhook (Slack ou Mattermost).
+
+## Banco de dados
+
+SQLite por padrão ou PostgreSQL. As migrações (Alembic) rodam sozinhas ao iniciar o app.
+
 Os detalhes de estados, permissões do bot e desenvolvimento estão no [README em inglês](README.md).
 
 ## Licença

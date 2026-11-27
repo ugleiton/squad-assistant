@@ -53,5 +53,9 @@ class GitLabClient:
             author_username=(mr.get("author") or {}).get("username"),
         )
 
+    async def current_user(self) -> str:
+        """Username of the token owner (used to test the connection)."""
+        return (await self._get("user"))["username"]
+
     async def aclose(self) -> None:
         await self._client.aclose()

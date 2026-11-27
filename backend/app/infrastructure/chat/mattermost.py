@@ -21,6 +21,9 @@ class MattermostProvider(ChatProvider):
         )
         self.bot_user_id = bot_user_id
 
+    async def get_bot_user_id(self) -> str | None:
+        return await self._bot_id()
+
     async def _bot_id(self) -> str:
         if not self.bot_user_id:
             resp = await self._client.get("users/me")
@@ -29,11 +32,18 @@ class MattermostProvider(ChatProvider):
         return self.bot_user_id
 
     @staticmethod
-    def _to_msg(p: dict) -> ChatMessage:
+    def _text(p: dict) -> str:
+        parts = [p.get("message") or ""]
+        for att in (p.get("props") or {}).get("attachments") or []:
+            parts += [att.get(k) or "" for k in ("title_link", "pretext", "text", "fallback")]
+        return "\n".join(x for x in parts if x)
+
+    @classmethod
+    def _to_msg(cls, p: dict) -> ChatMessage:
         return ChatMessage(
             id=p["id"],
             user_id=p.get("user_id"),
-            text=p.get("message", ""),
+            text=cls._text(p),
             created_at=datetime.fromtimestamp(p["create_at"] / 1000, tz=UTC),
             reply_count=p.get("reply_count", 0),
         )
@@ -43,11 +53,15 @@ class MattermostProvider(ChatProvider):
             f"channels/{channel_id}/posts", params={"since": int(since.timestamp() * 1000)}
         )
         resp.raise_for_status()
+        since_ms = int(since.timestamp() * 1000)
         posts = resp.json().get("posts", {}).values()
         return [
             self._to_msg(p)
             for p in posts
-            if not p.get("root_id") and not p.get("type") and p.get("delete_at", 0) == 0
+            if not p.get("root_id")
+            and not p.get("type")  # system messages have a type
+            and p.get("delete_at", 0) == 0
+            and p.get("create_at", 0) >= since_ms  # `since` also returns edited old posts
         ]
 
     async def list_replies(self, channel_id: str, thread_id: str) -> list[ChatMessage]:

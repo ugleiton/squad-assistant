@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlmodel import Session
 
@@ -7,6 +9,7 @@ from ...infrastructure.persistence.db import get_session
 from ...infrastructure.persistence.repositories import SqlReviewRepository
 
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
+log = logging.getLogger(__name__)
 
 
 @router.post("/gitlab/{assistant_id}")
@@ -22,5 +25,12 @@ async def gitlab_webhook(
     if not a.enabled:
         return {"ignored": "assistant disabled"}
     event = await request.json()
-    handled = await container.review_tracker(s, a).handle_gitlab_event(event)
+    try:
+        async with container.review_tracker(s, a) as tracker:
+            handled = await tracker.handle_gitlab_event(event)
+    except Exception as exc:
+        # Answer 200 anyway: GitLab disables webhooks that keep failing, and the next scan
+        # will reconcile the thread state.
+        log.exception("failed to handle GitLab event for assistant %s", assistant_id)
+        return {"threads": 0, "error": type(exc).__name__}
     return {"threads": handled}

@@ -113,6 +113,8 @@ class DailyAssistant(SQLModel, table=True):
     channel_id: str | None = None
     # Incoming webhook URL (Slack or Mattermost), stored encrypted
     webhook_url: str | None = None
+    # Which platform the incoming webhook belongs to (mention syntax differs)
+    webhook_platform: ChatProviderType | None = None
     lead_time_minutes: int = 10
     rotation_mode: RotationMode = RotationMode.daily
     meeting_url: str | None = None

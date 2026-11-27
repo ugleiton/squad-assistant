@@ -101,6 +101,7 @@ class DailyAssistantIn(BaseModel):
     chat_connection_id: int | None = None
     channel_id: str | None = None
     webhook_url: str | None = Field(default=None, description="Write-only")
+    webhook_platform: ChatProviderType | None = None
     lead_time_minutes: int = Field(default=10, ge=0)
     rotation_mode: RotationMode = RotationMode.daily
     meeting_url: str | None = None
