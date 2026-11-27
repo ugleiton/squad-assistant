@@ -83,10 +83,16 @@ npm install
 npm run dev                            # http://localhost:5173
 ```
 
+### Code organization
+
+The backend follows Clean Architecture: `domain` (entities and pure rules), `application`
+(use cases and ports), `infrastructure` (database, Slack, Mattermost, GitLab adapters) and
+`interfaces` (FastAPI). See [CLAUDE.md](CLAUDE.md) for the full layout and rules.
+
 ### Adding a language
 
 - Admin UI: add `frontend/src/locales/<lang>.json` and register it in `frontend/src/i18n.ts`.
-- Bot messages: add `backend/app/locales/<lang>.json` with the same keys as `en.json`.
+- Bot messages: add `backend/app/infrastructure/locales/<lang>.json` with the same keys as `en.json`.
 
 ## Docker images
 
