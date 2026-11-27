@@ -44,6 +44,10 @@ class ChatProvider(ABC):
     @abstractmethod
     def mention(self, user_id: str | None, username: str | None = None) -> str: ...
 
+    async def get_bot_user_id(self) -> str | None:
+        """User id the bot posts as, so its own replies can be ignored."""
+        return self.bot_user_id
+
     async def aclose(self) -> None:  # pragma: no cover
         return None
 

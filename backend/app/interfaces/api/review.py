@@ -86,7 +86,8 @@ def regenerate_token(aid: int, s: Session = Depends(get_session)):
 @router.post("/{aid}/scan")
 async def scan_now(aid: int, s: Session = Depends(get_session)):
     _get(s, aid)
-    found = await container.review_tracker(s, aid).scan()
+    async with container.review_tracker(s, aid) as tracker:
+        found = await tracker.scan()
     return {"new_threads": found}
 
 

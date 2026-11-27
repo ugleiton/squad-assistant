@@ -1,34 +1,102 @@
 {
-  "nav": { "review": "Review assistants", "daily": "Daily assistants", "squads": "Squads", "connections": "Conexões" },
+  "nav": {
+    "review": "Review assistants",
+    "daily": "Daily assistants",
+    "squads": "Squads",
+    "connections": "Conexões"
+  },
   "common": {
-    "name": "Nome", "add": "Adicionar", "save": "Salvar", "edit": "Editar", "delete": "Excluir", "close": "Fechar",
-    "enabled": "Ativo", "disabled": "desativado", "bot_language": "Idioma do bot",
-    "chat_connection": "Conexão de chat", "channel_id": "ID do canal"
+    "name": "Nome",
+    "add": "Adicionar",
+    "save": "Salvar",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "close": "Fechar",
+    "enabled": "Ativo",
+    "disabled": "desativado",
+    "bot_language": "Idioma do bot",
+    "chat_connection": "Conexão de chat",
+    "channel_id": "ID do canal",
+    "cancel": "Cancelar",
+    "enable": "Ativar",
+    "disable": "Desativar"
   },
   "connections": {
-    "chat": "Slack / Mattermost", "provider": "Plataforma", "server_url": "URL do servidor",
-    "bot_token": "Token do bot", "access_token": "Token de acesso (read_api)"
+    "chat": "Slack / Mattermost",
+    "provider": "Plataforma",
+    "server_url": "URL do servidor",
+    "bot_token": "Token do bot",
+    "access_token": "Token de acesso (read_api)",
+    "test": "Testar",
+    "test_ok_chat": "Conectado. Usuário do bot: {{id}}",
+    "test_ok_gitlab": "Conectado como {{user}}"
   },
-  "squads": { "squads": "Squads", "members": "Membros", "chat_user_id": "ID do usuário no chat", "chat_username": "Usuário no chat" },
+  "squads": {
+    "squads": "Squads",
+    "members": "Membros",
+    "chat_user_id": "ID do usuário no chat",
+    "chat_username": "Usuário no chat"
+  },
   "review": {
-    "new": "Novo review assistant", "projects": "Projetos GitLab (vazio = todos)", "squads": "Squads",
-    "scan_interval": "Intervalo de varredura (min)", "status_emojis": "Emojis de status", "features_title": "Ações",
-    "regenerate": "Novo token", "scan_now": "Varrer agora", "scan_result": "{{count}} novas threads encontradas",
+    "new": "Novo review assistant",
+    "projects": "Projetos GitLab (vazio = todos)",
+    "squads": "Squads",
+    "scan_interval": "Intervalo de varredura (min)",
+    "status_emojis": "Emojis de status",
+    "features_title": "Ações",
+    "regenerate": "Novo token",
+    "scan_now": "Varrer agora",
+    "scan_result": "{{count}} novas threads encontradas",
     "webhook_title": "Webhook do GitLab.",
     "webhook_help": "No GitLab, vá em Settings → Webhooks, cole a URL e o secret token e marque os eventos Merge request, Comments e Pipeline. O token aparece só uma vez.",
-    "state": { "awaiting_review": "Aguardando review", "in_review": "Em revisão", "resolved": "Resolvida / aprovada", "merged": "Mergeada", "closed": "Fechada" },
+    "state": {
+      "awaiting_review": "Aguardando review",
+      "in_review": "Em revisão",
+      "resolved": "Resolvida / aprovada",
+      "merged": "Mergeada",
+      "closed": "Fechada"
+    },
     "features": {
-      "mark_status": "Marcar status da thread com emojis", "mention_squad": "Mencionar a squad do autor",
-      "pipeline_messages": "Publicar status do pipeline", "merge_messages": "Publicar mensagem de merge",
+      "mark_status": "Marcar status da thread com emojis",
+      "mention_squad": "Mencionar a squad do autor",
+      "pipeline_messages": "Publicar status do pipeline",
+      "merge_messages": "Publicar mensagem de merge",
       "mark_resolved": "Marcar como resolvida quando aprovada ou discussões resolvidas"
-    }
+    },
+    "threads": "Threads",
+    "no_threads": "Nenhuma thread encontrada ainda. Rode uma varredura.",
+    "status": "Status",
+    "updated": "Atualizado"
   },
   "daily": {
-    "new": "Novo daily assistant", "timezone": "Fuso horário", "schedule": "Horários", "participants": "Participantes",
-    "rotation": "Revezamento do facilitador", "rotation_none": "Sem revezamento", "rotation_daily": "Por dia", "rotation_weekly": "Por semana",
-    "lead_time": "Avisar antes (min)", "meeting_url": "Link da reunião", "delivery": "Envio",
-    "delivery_bot": "Bot", "delivery_webhook": "Incoming webhook", "webhook_url": "URL do webhook",
-    "facilitator": "Facilitador", "send_test": "Enviar teste"
+    "new": "Novo daily assistant",
+    "timezone": "Fuso horário",
+    "schedule": "Horários",
+    "participants": "Participantes",
+    "rotation": "Revezamento do facilitador",
+    "rotation_none": "Sem revezamento",
+    "rotation_daily": "Por dia",
+    "rotation_weekly": "Por semana",
+    "lead_time": "Avisar antes (min)",
+    "meeting_url": "Link da reunião",
+    "delivery": "Envio",
+    "delivery_bot": "Bot",
+    "delivery_webhook": "Incoming webhook",
+    "webhook_url": "URL do webhook",
+    "facilitator": "Facilitador",
+    "send_test": "Enviar teste",
+    "webhook_platform": "Plataforma do webhook",
+    "absent": "Ausente (pula no revezamento)",
+    "order_help": "Ordem do revezamento: o facilitador segue esta lista.",
+    "test_sent": "Teste enviado: {{text}}"
   },
-  "weekday": { "0": "Seg", "1": "Ter", "2": "Qua", "3": "Qui", "4": "Sex", "5": "Sáb", "6": "Dom" }
+  "weekday": {
+    "0": "Seg",
+    "1": "Ter",
+    "2": "Qua",
+    "3": "Qui",
+    "4": "Sex",
+    "5": "Sáb",
+    "6": "Dom"
+  }
 }

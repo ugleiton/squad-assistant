@@ -1,6 +1,6 @@
 from collections.abc import Iterator
 
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import Session, create_engine
 
 from ..config import get_settings
 
@@ -10,9 +10,10 @@ engine = create_engine(_settings.database_url, connect_args=_connect_args)
 
 
 def init_db() -> None:
-    from . import models  # noqa: F401  (register tables)
+    """Create or upgrade the schema with Alembic migrations."""
+    from .migrate import upgrade_to_head
 
-    SQLModel.metadata.create_all(engine)
+    upgrade_to_head(engine)
 
 
 def get_session() -> Iterator[Session]:

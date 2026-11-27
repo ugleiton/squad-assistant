@@ -1,7 +1,9 @@
 import { FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api, ChatConnection, DailyAssistant, Member } from "../api";
+import { Notice, Status } from "../Notice";
 import { useList } from "../useList";
+import { useMeta } from "../useMeta";
 
 type Form = Omit<DailyAssistant, "id"> & { id?: number };
 const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6];
@@ -9,7 +11,7 @@ const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 const empty = (): Form => ({
   name: "", enabled: true, language: "en", timezone: browserTz, delivery: "bot",
-  chat_connection_id: null, channel_id: "", webhook_url: "", lead_time_minutes: 10,
+  chat_connection_id: null, channel_id: "", webhook_url: "", webhook_platform: "slack", lead_time_minutes: 10,
   rotation_mode: "daily", meeting_url: "", schedules: [], participants: [],
 });
 
@@ -20,11 +22,17 @@ export default function DailyAssistants() {
   const members = useList<Member>("/members");
   const [form, setForm] = useState<Form>(empty());
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<Status>(null);
+  const meta = useMeta();
 
   const save = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
-    const body = { ...form, webhook_url: form.webhook_url || null };
+    const body = {
+      ...form,
+      webhook_url: form.webhook_url || null,
+      participants: form.participants.map((p, i) => ({ ...p, order: i })),
+    };
     try {
       if (form.id) await api.put(`/daily-assistants/${form.id}`, body);
       else await api.post("/daily-assistants", body);
@@ -45,21 +53,43 @@ export default function DailyAssistants() {
       : [...f.participants, { member_id: id, order: f.participants.length, active: true }],
   }));
   const nameOf = (id?: number | null) => members.items.find((m) => m.id === id)?.name ?? "—";
+  const move = (idx: number, delta: number) => setForm((f) => {
+    const ps = [...f.participants];
+    const j = idx + delta;
+    if (j < 0 || j >= ps.length) return f;
+    [ps[idx], ps[j]] = [ps[j], ps[idx]];
+    return { ...f, participants: ps };
+  });
+  const setActive = (idx: number, active: boolean) => setForm((f) => ({
+    ...f, participants: f.participants.map((p, i) => (i === idx ? { ...p, active } : p)),
+  }));
+  const sendTest = async (id: number) => {
+    try {
+      const r = await api.post<{ text: string }>(`/daily-assistants/${id}/send-test`);
+      setStatus({ kind: "ok", text: t("daily.test_sent", { text: r.text }) });
+    } catch (e) { setStatus({ kind: "error", text: String(e) }); }
+  };
+  const toggleEnabled = async (a: DailyAssistant) => {
+    await api.put(`/daily-assistants/${a.id}`, { ...a, enabled: !a.enabled, webhook_url: null });
+    list.reload();
+  };
 
   return (
     <>
+      <Notice status={status} onClose={() => setStatus(null)} />
       <section className="card">
         <h2>{t("nav.daily")}</h2>
         <table>
           <tbody>
             {list.items.map((a) => (
-              <tr key={a.id}>
+              <tr key={a.id} className={a.enabled ? "" : "muted"}>
                 <td><b>{a.name}</b> {a.enabled ? "" : `(${t("common.disabled")})`}</td>
                 <td>{a.schedules.map((s) => `${t(`weekday.${s.weekday}`)} ${s.time.slice(0, 5)}`).join(", ")}</td>
                 <td>{t("daily.facilitator")}: {nameOf(a.current_facilitator_id)}</td>
                 <td>
                   <button className="link" onClick={() => setForm({ ...a, webhook_url: "" })}>{t("common.edit")}</button>
-                  <button className="link" onClick={() => api.post(`/daily-assistants/${a.id}/send-test`)}>{t("daily.send_test")}</button>
+                  <button className="link" onClick={() => sendTest(a.id)}>{t("daily.send_test")}</button>
+                  <button className="link" onClick={() => toggleEnabled(a)}>{a.enabled ? t("common.disable") : t("common.enable")}</button>
                 </td>
               </tr>
             ))}
@@ -73,7 +103,7 @@ export default function DailyAssistants() {
           <label>{t("daily.timezone")}<input required value={form.timezone} onChange={(e) => setForm({ ...form, timezone: e.target.value })} /></label>
           <label>{t("common.bot_language")}
             <select value={form.language} onChange={(e) => setForm({ ...form, language: e.target.value })}>
-              <option>en</option><option>pt_BR</option>
+              {(meta?.languages ?? ["en"]).map((l) => <option key={l}>{l}</option>)}
             </select>
           </label>
           <label className="inline"><input type="checkbox" checked={form.enabled} onChange={(e) => setForm({ ...form, enabled: e.target.checked })} /> {t("common.enabled")}</label>
@@ -93,6 +123,29 @@ export default function DailyAssistants() {
             <label key={m.id} className="inline"><input type="checkbox" checked={isParticipant(m.id)} onChange={() => toggleParticipant(m.id)} /> {m.name}</label>
           ))}
         </div>
+        {form.participants.length > 0 && (
+          <>
+            <p><small>{t("daily.order_help")}</small></p>
+            <table>
+              <tbody>
+                {form.participants.map((p, i) => (
+                  <tr key={p.member_id} className={p.active ? "" : "muted"}>
+                    <td>{i + 1}. {nameOf(p.member_id)}</td>
+                    <td>
+                      <button type="button" className="link" onClick={() => move(i, -1)} disabled={i === 0}>↑</button>
+                      <button type="button" className="link" onClick={() => move(i, 1)} disabled={i === form.participants.length - 1}>↓</button>
+                    </td>
+                    <td>
+                      <label className="inline">
+                        <input type="checkbox" checked={!p.active} onChange={(e) => setActive(i, !e.target.checked)} /> {t("daily.absent")}
+                      </label>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        )}
         <div className="row">
           <label>{t("daily.rotation")}
             <select value={form.rotation_mode} onChange={(e) => setForm({ ...form, rotation_mode: e.target.value as Form["rotation_mode"] })}>
@@ -122,9 +175,16 @@ export default function DailyAssistants() {
               <label>{t("common.channel_id")}<input required value={form.channel_id ?? ""} onChange={(e) => setForm({ ...form, channel_id: e.target.value })} /></label>
             </>
           ) : (
+            <>
+            <label>{t("daily.webhook_platform")}
+              <select value={form.webhook_platform ?? "slack"} onChange={(e) => setForm({ ...form, webhook_platform: e.target.value as "slack" | "mattermost" })}>
+                <option value="slack">Slack</option><option value="mattermost">Mattermost</option>
+              </select>
+            </label>
             <label style={{ flex: 1 }}>{t("daily.webhook_url")}
               <input type="password" required={!form.has_webhook_url} placeholder={form.has_webhook_url ? "••••••" : ""} value={form.webhook_url ?? ""} onChange={(e) => setForm({ ...form, webhook_url: e.target.value })} />
             </label>
+            </>
           )}
         </div>
         {error && <p className="error">{error}</p>}

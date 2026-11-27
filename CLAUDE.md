@@ -57,6 +57,7 @@ backend/
       entities.py               Member, ReviewAssistant, ReviewThread, DailyAssistant, ...
       enums.py                  ReviewState, RotationMode, DeliveryMode, ChatProviderType, defaults
       review_state.py           compute_state(): review status rules
+      squads.py                 squad_mates(): who to mention (author by chat id or GitLab user)
       mr_links.py               GitLab MR link parsing and project filter
       rotation.py               facilitator rotation (none / daily / weekly)
       daily_schedule.py         due_daily(): when a reminder must be sent
@@ -68,7 +69,8 @@ backend/
     infrastructure/
       config.py                 Settings (env prefix SQUAD_)
       container.py              builds use cases with their adapters
-      persistence/              db.py (engine), models.py (ORM tables), mappers.py, repositories.py
+      persistence/              db.py (engine), models.py (ORM tables), mappers.py, repositories.py,
+                                migrate.py + migrations/ (Alembic)
       chat/                     slack.py, mattermost.py, webhook.py, factory.py
       gitlab/client.py          GitLab REST adapter (MR status, approvals, discussions)
       i18n.py, locales/*.json   bot message catalogs (en, pt_BR)
@@ -112,13 +114,17 @@ npm install
 npm run dev                          # http://localhost:5173, proxies /api and /webhooks to :8000
 npm run build                        # type check + build
 
+# migrations (from backend/)
+alembic revision --autogenerate -m "describe change"
+alembic upgrade head
+
 # whole app
 docker compose up -d                 # SQLite
 docker compose --profile postgres up -d
 ```
 
-CI (`ci.yml`) runs `ruff check`, `ruff format --check`, `pytest`, `npm run build` and
-`docker build`. Keep all of them green.
+CI (`ci.yml`) runs `ruff check`, `ruff format --check`, `pytest`, the Alembic migrations on
+PostgreSQL, `npm run build` and `docker build`. Keep all of them green.
 
 ## Conventions
 
@@ -129,6 +135,10 @@ CI (`ci.yml`) runs `ruff check`, `ruff format --check`, `pytest`, `npm run build
 - **Secrets** (bot tokens, GitLab tokens, incoming webhook URLs) are stored with
   `security.encrypt()` and never returned by the API; responses expose `has_token`-style flags.
   The GitLab webhook token is only stored as a SHA-256 hash and shown once on creation/regeneration.
+- **Use cases are opened with `async with container.review_tracker(...)` /
+  `container.daily_reminder(...)`** so HTTP clients are closed.
+- **Errors from Slack, Mattermost or GitLab** surface as HTTP 502 in the admin API. The GitLab
+  webhook always answers 200 (GitLab disables failing hooks); the next scan reconciles.
 - **Chat platforms**: new behavior goes through the `ChatProvider` port and must be
   implemented for both Slack and Mattermost. Emoji names are passed without colons. The
   incoming-webhook provider can only post messages (fine for dailies, not for reviews).
@@ -136,8 +146,12 @@ CI (`ci.yml`) runs `ruff check`, `ruff format --check`, `pytest`, `npm run build
   `daily_schedule.py`). Change the tests alongside the rules.
 - **Datetimes** are timezone-aware UTC in the database (`domain.entities.utcnow()`); daily schedules are
   wall-clock times interpreted in the assistant's `timezone`.
-- **Schema changes**: tables are created with `create_all` for now (no Alembic yet). Adding
-  Alembic migrations is on the roadmap; until then, prefer additive, nullable/defaulted columns.
+- **Schema changes** go through Alembic. Change `infrastructure/persistence/models.py`, then from
+  `backend/` run `alembic revision --autogenerate -m "..."` and review the file in
+  `infrastructure/persistence/migrations/versions/` (number revisions `0003`, `0004`, ...).
+  Migrations run automatically on startup (`persistence/migrate.py`); databases created by
+  v0.1 without Alembic are stamped as `0001` first. CI checks the migrations on PostgreSQL
+  (`alembic check`), and `tests/infrastructure/test_migrations.py` checks them on SQLite.
 - Tests must not hit the network: use the fakes in `tests/fakes.py` or `respx`.
 - Code style: ruff (line length 100). Python type hints everywhere.
 - Docs: README.md (English) and README.pt-BR.md. Contributions may be in English or Portuguese.

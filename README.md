@@ -57,10 +57,17 @@ GitLab ──webhook──► FastAPI ◄── Admin UI (React)
 | Merged | MR merged | `:rocket:` |
 | Closed | MR closed without merge | `:heavy_check_mark:` (gray check) |
 
+The squad to mention is the author's squad: the author is matched by the chat user who posted the
+thread or, if that person is not registered, by the GitLab user who opened the MR. MRs that are
+already merged or closed when found are only marked, without mentions. Use **Threads** in the UI
+to see every tracked MR and its state, and **Test** on a connection to check the tokens.
+
 ### Daily assistant
 
 Pick the weekdays and times, time zone, participants, rotation (none, daily or weekly), how many
-minutes before to alert, and the delivery: the bot (real @mentions) or an incoming webhook.
+minutes before to alert, and the delivery: the bot (real @mentions) or an incoming webhook
+(Slack or Mattermost). Participants follow the order you set; mark someone as absent to skip
+them in the rotation.
 
 ### Required bot permissions
 
@@ -106,7 +113,8 @@ them to Docker Hub: every push to `main` publishes `:main`, and a tag like `v0.1
 - [x] Project skeleton, data model, Slack and Mattermost adapters, GitLab webhook with generated token
 - [x] Review state machine, squad mentions, pipeline and merge messages
 - [x] Daily reminders with rotation
-- [ ] Alembic migrations
+- [x] Alembic migrations (applied on startup, checked on PostgreSQL in CI)
+- [x] Connection tests, tracked threads view, absent participants and rotation order
 - [ ] Skip days off and holidays in the daily rotation
 - [ ] Slack/Mattermost slash commands (e.g. `/daily skip`)
 - [ ] Helm chart

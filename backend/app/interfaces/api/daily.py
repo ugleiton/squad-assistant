@@ -84,6 +84,8 @@ def list_assistants(s: Session = Depends(get_session)):
 @router.post("", response_model=DailyAssistantOut, status_code=201)
 def create_assistant(body: DailyAssistantIn, s: Session = Depends(get_session)):
     _validate(body)
+    if body.delivery == "webhook" and not body.webhook_url:
+        raise HTTPException(422, "Webhook delivery needs webhook_url")
     a = DailyAssistant(name=body.name)
     _apply(s, a, body)
     s.commit()
@@ -110,7 +112,8 @@ def update_assistant(aid: int, body: DailyAssistantIn, s: Session = Depends(get_
 async def send_test(aid: int, s: Session = Depends(get_session)):
     """Posts a sample reminder now, without advancing the rotation."""
     _get(s, aid)
-    return {"text": await container.daily_reminder(s, aid).send_test()}
+    async with container.daily_reminder(s, aid) as reminder:
+        return {"text": await reminder.send_test()}
 
 
 @router.delete("/{aid}", status_code=204)

@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 
+from ...infrastructure.chat import provider_for_connection
+from ...infrastructure.gitlab.client import GitLabClient
 from ...infrastructure.persistence.db import get_session
 from ...infrastructure.persistence.models import ChatConnection, GitLabConnection
-from ...infrastructure.security import encrypt
+from ...infrastructure.security import decrypt, encrypt
 from .schemas import ChatConnectionIn, ChatConnectionOut, GitLabConnectionIn, GitLabConnectionOut
 
 router = APIRouter(tags=["connections"])
@@ -59,6 +61,20 @@ def delete_chat(cid: int, s: Session = Depends(get_session)):
     s.commit()
 
 
+@router.post("/chat-connections/{cid}/test")
+async def test_chat(cid: int, s: Session = Depends(get_session)):
+    """Checks the bot token and stores the bot user id (used to ignore the bot's own replies)."""
+    c = s.get(ChatConnection, cid) or _404()
+    chat = provider_for_connection(c)
+    try:
+        c.bot_user_id = await chat.get_bot_user_id()
+    finally:
+        await chat.aclose()
+    s.add(c)
+    s.commit()
+    return {"ok": True, "bot_user_id": c.bot_user_id}
+
+
 @router.get("/gitlab-connections", response_model=list[GitLabConnectionOut])
 def list_gitlab(s: Session = Depends(get_session)):
     return [_gl_out(c) for c in s.exec(select(GitLabConnection)).all()]
@@ -85,6 +101,16 @@ def update_gitlab(cid: int, body: GitLabConnectionIn, s: Session = Depends(get_s
     s.commit()
     s.refresh(c)
     return _gl_out(c)
+
+
+@router.post("/gitlab-connections/{cid}/test")
+async def test_gitlab(cid: int, s: Session = Depends(get_session)):
+    c = s.get(GitLabConnection, cid) or _404()
+    client = GitLabClient(c.base_url, decrypt(c.access_token))
+    try:
+        return {"ok": True, "username": await client.current_user()}
+    finally:
+        await client.aclose()
 
 
 @router.delete("/gitlab-connections/{cid}", status_code=204)

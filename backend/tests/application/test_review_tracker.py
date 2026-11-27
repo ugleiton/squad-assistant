@@ -113,3 +113,12 @@ async def test_features_can_be_disabled():
     )
     await tracker.scan(NOW)
     assert chat.posts == [] and chat.reactions == []
+
+
+async def test_no_squad_mention_for_mr_already_merged_when_found():
+    tracker, repo, chat, _ = make(
+        [msg("1.1", "https://gitlab.com/g/app/-/merge_requests/4")], status(state="merged")
+    )
+    await tracker.scan(NOW)
+    assert chat.posts == []
+    assert chat.reactions[-1] == ("+", "1.1", "rocket")

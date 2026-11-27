@@ -4,12 +4,14 @@ import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, FastAPI
-from fastapi.responses import FileResponse
+import httpx
+from fastapi import APIRouter, Depends, FastAPI, Request
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import __version__
 from .domain.enums import DEFAULT_REVIEW_EMOJIS, DEFAULT_REVIEW_FEATURES
+from .infrastructure.chat.slack import SlackError as UpstreamError
 from .infrastructure.config import get_settings
 from .infrastructure.i18n import available_languages
 from .infrastructure.persistence.db import init_db
@@ -35,6 +37,19 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Squad Assistant", version=__version__, lifespan=lifespan)
+
+
+@app.exception_handler(httpx.HTTPError)
+@app.exception_handler(UpstreamError)
+async def upstream_error(request: Request, exc: Exception):
+    """Errors from Slack, Mattermost or GitLab are shown to the admin instead of a bare 500."""
+    return JSONResponse(status_code=502, content={"detail": f"{type(exc).__name__}: {exc}"})
+
+
+@app.exception_handler(LookupError)
+async def missing_config(request: Request, exc: LookupError):
+    return JSONResponse(status_code=422, content={"detail": str(exc)})
+
 
 api = APIRouter(prefix="/api", dependencies=[Depends(require_admin)])
 for r in (connections.router, squads.router, review.router, daily.router):

@@ -7,13 +7,15 @@ export default function Squads() {
   const { t } = useTranslation();
   const members = useList<Member>("/members");
   const squads = useList<Squad>("/squads");
-  const [m, setM] = useState({ name: "", chat_user_id: "", chat_username: "", gitlab_username: "" });
+  const emptyMember = { name: "", chat_user_id: "", chat_username: "", gitlab_username: "" };
+  const [m, setM] = useState<typeof emptyMember & { id?: number }>(emptyMember);
   const [squad, setSquad] = useState<{ id?: number; name: string; member_ids: number[] }>({ name: "", member_ids: [] });
 
   const addMember = async (e: FormEvent) => {
     e.preventDefault();
-    await api.post("/members", m);
-    setM({ name: "", chat_user_id: "", chat_username: "", gitlab_username: "" });
+    if (m.id) await api.put(`/members/${m.id}`, m);
+    else await api.post("/members", m);
+    setM(emptyMember);
     members.reload();
   };
   const saveSquad = async (e: FormEvent) => {
@@ -67,7 +69,10 @@ export default function Squads() {
             {members.items.map((x) => (
               <tr key={x.id}>
                 <td>{x.name}</td><td>{x.chat_user_id}</td><td>{x.chat_username}</td><td>{x.gitlab_username}</td>
-                <td><button className="link" onClick={() => api.del(`/members/${x.id}`).then(members.reload)}>{t("common.delete")}</button></td>
+                <td>
+                  <button className="link" onClick={() => setM({ id: x.id, name: x.name, chat_user_id: x.chat_user_id ?? "", chat_username: x.chat_username ?? "", gitlab_username: x.gitlab_username ?? "" })}>{t("common.edit")}</button>
+                  <button className="link" onClick={() => api.del(`/members/${x.id}`).then(members.reload)}>{t("common.delete")}</button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -77,7 +82,8 @@ export default function Squads() {
           <label>{t("squads.chat_user_id")}<input value={m.chat_user_id} onChange={(e) => setM({ ...m, chat_user_id: e.target.value })} /></label>
           <label>{t("squads.chat_username")}<input value={m.chat_username} onChange={(e) => setM({ ...m, chat_username: e.target.value })} /></label>
           <label>GitLab<input value={m.gitlab_username} onChange={(e) => setM({ ...m, gitlab_username: e.target.value })} /></label>
-          <button className="primary">{t("common.add")}</button>
+          <button className="primary">{m.id ? t("common.save") : t("common.add")}</button>
+          {m.id && <button type="button" className="link" onClick={() => setM(emptyMember)}>{t("common.cancel")}</button>}
         </form>
       </section>
     </>
